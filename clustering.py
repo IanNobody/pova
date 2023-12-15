@@ -18,6 +18,16 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
 
+def parseargs():
+    parser = argparse.ArgumentParser('Cluster images by their similarity.')
+    parser.add_argument('-i', '--input-path', required=True, help='Path to input images.')
+    parser.add_argument('-o', '--output-path', required=True, help='Where to save the clustered images.')
+    parser.add_argument('-f', '--features-path', default=r"./features", help='Where to save the extracted features.')
+    parser.add_argument('-n', '--n-clusters', required=True, type=int, help='Number of expected clusters for K-means.')
+    args = parser.parse_args()
+    return args
+
+
 class ImageDataset(Dataset):
     def __init__(self, images_dir):
         self.images = [f for f in os.listdir(images_dir) if f.endswith(".jpg") or f.endswith(".JPG")]
@@ -82,22 +92,7 @@ def extract_features(dataloader, model, dest_path):
         save_batch(feat, filenames, dest_path, bidx)
 
 
-def parseargs():
-    parser = argparse.ArgumentParser('Cluster images by their similarity.')
-    parser.add_argument('-i', '--input-path', required=True, help='Path to input images.')
-    parser.add_argument('-o', '--output-path', required=True, help='Where to save the clustered images.')
-    parser.add_argument('-f', '--features-path', default=r"./features", help='Where to save the extracted features.')
-    parser.add_argument('-n', '--n-clusters', required=True, type=int, help='Number of expected clusters for K-means.')
-    args = parser.parse_args()
-    return args
-
-
 if __name__ == '__main__':
-    # data_path = r"gdrive/MyDrive/pova_dataset/POVa-processed"
-    # output_path = r"gdrive/MyDrive/pova_dataset/train_sorted"
-    # features_path = r"./features"
-    # n_clusters = 50
-
     args = parseargs()
     data_path = args.input_path
     output_path = args.output_path
