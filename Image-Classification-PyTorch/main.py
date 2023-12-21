@@ -5,6 +5,7 @@ import yaml
 
 from convNet import CNN
 from AlexNet import AlexNet
+from ModifiedAlexNet import ModifiedAlexNet
 from DenseNet import DenseNet
 from GoogLeNet import GoogLeNet
 from ResNet import ResNet
@@ -31,6 +32,8 @@ from train_test import Training
 from trainAndTestWithSAM import TrainingWithSAM
 import random
 import numpy as np
+import torch.nn as nn
+from copy import deepcopy
 
 """Device Selection"""
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
@@ -43,7 +46,6 @@ model_parser.add_argument('--checkpoint', type=bool, required=False)
 model_parser.add_argument('--sam', type=bool, required=False)
 model_parser.add_argument('--data_path', type=str, required=True)
 model_parser.add_argument('--manual_seed', type=int, required=False)
-model_parser.add_argument('--precision_only', type=bool, required=False)
 args = model_parser.parse_args()
 
 if args.manual_seed:
@@ -62,10 +64,13 @@ except FileNotFoundError:
 """Dataset Initialization"""
 data_initialization = initialize_dataset(image_resolution=config['parameters']['image_resolution'], batch_size=config['parameters']['batch_size'], 
                       MNIST=config['parameters']['MNIST'])
-train_dataloader, test_dataloader = data_initialization.load_dataset(args.data_path, transform=True)
+train_dataloader, test_dataloader = data_initialization.load_dataset(args.data_path, transform=True, custom_model=args.model == 'custom')
 
-input_channel = next(iter(train_dataloader))[0].shape[1]
-#n_classes = len(torch.unique(next(iter(train_dataloader))[1]))
+if args.model == 'custom':
+    input_channel = next(iter(train_dataloader))[0][0].shape[1]
+else:
+    input_channel = next(iter(train_dataloader))[0].shape[1]
+# n_classes = len(torch.unique(next(iter(train_dataloader))[1]))
 n_classes = config['parameters']['n_classes']
 
 """Model Initialization"""
@@ -77,9 +82,18 @@ if args.model == 'vggnet':
 elif args.model == 'alexnet':
     model = AlexNet(input_channel=input_channel, n_classes=n_classes).to(device)
     print("Loading AlexNet...")
-    model.load_state_dict(torch.load('model_store/alexnetbest-model-parameters.pt'))
+    model.load_state_dict(torch.load('model_store/alexnetbest-model-parameters.pt', map_location=device))
     print("AlexNet loaded from checkpoint.")
     model.fc[-1] = torch.nn.Linear(4096, 2).to(device)
+    n_classes = 2
+
+elif args.model == 'custom':
+    alexnet = AlexNet(input_channel=input_channel, n_classes=n_classes).to(device)
+    print("Loading AlexNet...")
+    alexnet.load_state_dict(torch.load('model_store/alexnetbest-model-parameters.pt', map_location=device))
+    print("AlexNet loaded from checkpoint.")
+    fc = torch.nn.Linear(4096, 2).to(device)
+    model = ModifiedAlexNet(input_channel=input_channel, alexnet=alexnet, fc=fc).to(device)
     n_classes = 2
 
 elif args.model == 'senet':
@@ -169,16 +183,21 @@ elif args.model in ['efficientnetv2']:
 
 print(f'Total Number of Parameters of {args.model.capitalize()} is {round((sum(p.numel() for p in model.parameters()))/1000000, 2)}M')
 if not args.sam:
+    is_custom = args.model == 'custom'
+    args.model = args.model if not is_custom else 'alexnet'
     trainer = Training(model=model, optimizer=config['parameters']['optimizer'], learning_rate=config['parameters']['learning_rate'], 
                 train_dataloader=train_dataloader, num_epochs=config['parameters']['num_epochs'],test_dataloader=test_dataloader,
                 model_name=args.model, model_save=args.model_save, checkpoint=args.checkpoint)
-    precision = trainer.runner(args.precision_only)
+    precision = trainer.runner(custom_model=is_custom)
     print("Average valid accuracy: ", np.mean(precision))
 else:
+    is_custom = args.model == 'custom'
+    args.model = args.model if not is_custom else 'alexnet'
     trainer = TrainingWithSAM(model=model, optimizer=config['parameters']['optimizer'], learning_rate=config['parameters']['learning_rate'], 
                 train_dataloader=train_dataloader, num_epochs=config['parameters']['num_epochs'],test_dataloader=test_dataloader,
                 model_name=args.model, model_save=args.model_save, checkpoint=args.checkpoint)
-    trainer.runner()
+    precision = trainer.runner(custom_model=is_custom)
+    print("Average valid accuracy: ", np.mean(precision))
     
 # Calculate FLops and Memory Usage.
 # model.to('cpu')

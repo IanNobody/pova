@@ -24,7 +24,7 @@ class Training:
         self.model_save = model_save
         self.checkpoint = checkpoint
 
-    def runner(self, precision_only=False):
+    def runner(self, custom_model=False):
         best_accuracy = float('-inf')
         criterion = nn.CrossEntropyLoss()
         if self.model_name in ['alexnet', 'vit', 'mlpmixer', 'resmlp', 'squeezenet', 'senet', 'mobilenetv1', 'gmlp', 'efficientnetv2']:
@@ -50,11 +50,23 @@ class Training:
             correct = 0
             total = 0
             for i, (images, labels) in enumerate(self.train_dataloader):
-                images = images.to(device)
+
+                if custom_model:
+                    images = images[0].to(device)
+                    print(images.shape)
+                    background = images[0].to(device)
+                else:
+                    images = images.to(device)
+                    background = None
+
                 labels = labels.to(device)
                 
                 # Forward pass
-                outputs = self.model(images)
+                if custom_model:
+                    outputs = self.model(images, background)
+                else:
+                    outputs = self.model(images)
+
                 loss = criterion(outputs, labels)
 
                 # Backward and optimize
@@ -68,7 +80,7 @@ class Training:
                 correct += predicted.eq(labels).sum().item()
                 train_loss=running_loss/len(self.train_dataloader)
                 train_accuracy = 100.*correct/total
-                if (i+1) % 100 == 0 and not precision_only:
+                if (i+1) % 100 == 0:
                     print ('Epoch [{}/{}], Step [{}/{}], Accuracy: {:.3f}, Train Loss: {:.4f}'
                     .format(epoch+1, self.num_epochs, i+1, total_step, train_accuracy, loss.item()))
                 
@@ -90,9 +102,7 @@ class Training:
                         correct += (predicted == labels).sum().item()
                         test_loss=running_loss/len(self.test_dataloader)
                         test_accuracy = (correct*100)/total
-                    if precision_only:
-                        print("%.3f"%(test_accuracy))
-                    else:
+
                         print('Epoch: %.0f | Test Loss: %.3f | Accuracy: %.3f'%(epoch+1, test_loss, test_accuracy))
 
             if test_accuracy > best_accuracy and self.model_save:
@@ -100,9 +110,8 @@ class Training:
                 #torch.save(self.model, 'model_store/'+self.model_name+'_best-model.pt')
                 torch.save(self.model.state_dict(), 'model_store/'+self.model_name+'best-model-parameters.pt')
 
-            if not precision_only:
-                for p in self.optimizer.param_groups:
-                        print(f"Epoch {epoch+1} Learning Rate: {p['lr']}")
+            for p in self.optimizer.param_groups:
+                    print(f"Epoch {epoch+1} Learning Rate: {p['lr']}")
 
             if self.model_name in ['alexnet', 'vit', 'mlpmixer', 'resmlp', 'squeezenet', 'senet', 'mobilenetv1', 'gmlp', 'efficientnetv2']:
                 scheduler.step()

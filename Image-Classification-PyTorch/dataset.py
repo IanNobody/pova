@@ -11,7 +11,7 @@ class initialize_dataset:
         self.batch_size=batch_size
         self.MNIST = MNIST
 
-    def load_dataset(self, path, transform=False):
+    def load_dataset(self, path, transform=False, custom_model=False):
         #path = "./data"
         #path = './trailcam'
         #path = './custom_dataset'
@@ -28,28 +28,41 @@ class initialize_dataset:
                  transforms.RandomHorizontalFlip(), transforms.Normalize(mean=[74.9580, 77.5921, 73.6654], std=[50.9340, 51.9717, 50.6036])])
 
         if self.MNIST:
-            # train_dataset = trapcam_dataset.TrapcamDataset(img_dir=path + '/images/train',
-            #                                                label_dir=path + '/labels/train', transform=transform)
-            # test_dataset = trapcam_dataset.TrapcamDataset(img_dir=path + '/images/test',
-            #                                               label_dir=path + '/labels/test', transform=transform)
-            train_dataset = custom_dataset.CustomDataset(img_dir=path + '/train',
-                                                         transform=transform)
-            test_dataset = custom_dataset.CustomDataset(img_dir=path + '/test',
-                                                        transform=transform)
-        else:
             train_dataset = torchvision.datasets.CIFAR10(root=path, train=True,
                                                         transform = transform,
                                                         download=True)
             test_dataset = torchvision.datasets.CIFAR10(root=path, train=False,
                                                     transform = transform,
                                                     download=True)
+        else:
+            # train_dataset = trapcam_dataset.TrapcamDataset(img_dir=path + '/images/train',
+            #                                                label_dir=path + '/labels/train', transform=transform)
+            # test_dataset = trapcam_dataset.TrapcamDataset(img_dir=path + '/images/test',
+            #                                               label_dir=path + '/labels/test', transform=transform)
+            train_dataset = custom_dataset.CustomDataset(img_dir=path + '/train',
+                                                         transform=transform,
+                                                         custom_model=custom_model)
+            test_dataset = custom_dataset.CustomDataset(img_dir=path + '/test',
+                                                        transform=transform,
+                                                        custom_model=custom_model)
 
-        train_dataloader = torch.utils.data.DataLoader(dataset = train_dataset,
-                                                        batch_size=self.batch_size,
-                                                        shuffle=True)
-        test_dataloader = torch.utils.data.DataLoader(dataset = test_dataset,
-                                                        batch_size=self.batch_size,
-                                                        shuffle=True,
-                                                      num_workers=8)
+        if self.MNIST:
+            train_dataloader = torch.utils.data.DataLoader(dataset = train_dataset,
+                                                            batch_size=self.batch_size,
+                                                            shuffle=True)
+            test_dataloader = torch.utils.data.DataLoader(dataset = test_dataset,
+                                                            batch_size=self.batch_size,
+                                                            shuffle=True,
+                                                          num_workers=8)
+        else:
+            train_dataloader = torch.utils.data.DataLoader(dataset=train_dataset,
+                                                           batch_size=self.batch_size,
+                                                           shuffle=True,
+                                                           collate_fn=custom_dataset.CustomDataset.collate_fn)
+            test_dataloader = torch.utils.data.DataLoader(dataset=test_dataset,
+                                                          batch_size=self.batch_size,
+                                                          shuffle=True,
+                                                          num_workers=8,
+                                                          collate_fn=custom_dataset.CustomDataset.collate_fn)
 
         return train_dataloader, test_dataloader
