@@ -53,7 +53,6 @@ class Training:
 
                 if custom_model:
                     images = images[0].to(device)
-                    print(images.shape)
                     background = images[0].to(device)
                 else:
                     images = images.to(device)
@@ -92,9 +91,21 @@ class Training:
                     total = 0
                     running_loss = 0
                     for images, labels in self.test_dataloader:
-                        images = images.to(device)
+
+                        if custom_model:
+                            images = images[0].to(device)
+                            background = images[0].to(device)
+                        else:
+                            images = images.to(device)
+                            background = None
+
                         labels = labels.to(device)
-                        outputs = self.model(images)
+
+                        if custom_model:
+                            outputs = self.model(images, background)
+                        else:
+                            outputs = self.model(images)
+
                         loss= criterion(outputs,labels)
                         running_loss+=loss.item()
                         _, predicted = torch.max(outputs.data, 1)
@@ -113,8 +124,8 @@ class Training:
             for p in self.optimizer.param_groups:
                     print(f"Epoch {epoch+1} Learning Rate: {p['lr']}")
 
-            if self.model_name in ['alexnet', 'vit', 'mlpmixer', 'resmlp', 'squeezenet', 'senet', 'mobilenetv1', 'gmlp', 'efficientnetv2']:
-                scheduler.step()
+            # if self.model_name in ['alexnet', 'vit', 'mlpmixer', 'resmlp', 'squeezenet', 'senet', 'mobilenetv1', 'gmlp', 'efficientnetv2']:
+            #     scheduler.step()
 
             if self.checkpoint:
                 path = 'checkpoints/checkpoint{:04d}.pth.tar'.format(epoch)

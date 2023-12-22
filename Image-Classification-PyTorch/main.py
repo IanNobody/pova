@@ -46,6 +46,7 @@ model_parser.add_argument('--checkpoint', type=bool, required=False)
 model_parser.add_argument('--sam', type=bool, required=False)
 model_parser.add_argument('--data_path', type=str, required=True)
 model_parser.add_argument('--manual_seed', type=int, required=False)
+model_parser.add_argument('--ref_dataset', type=bool, required=False)
 args = model_parser.parse_args()
 
 if args.manual_seed:
@@ -64,9 +65,10 @@ except FileNotFoundError:
 """Dataset Initialization"""
 data_initialization = initialize_dataset(image_resolution=config['parameters']['image_resolution'], batch_size=config['parameters']['batch_size'], 
                       MNIST=config['parameters']['MNIST'])
-train_dataloader, test_dataloader = data_initialization.load_dataset(args.data_path, transform=True, custom_model=args.model == 'custom')
+train_dataloader, test_dataloader = data_initialization.load_dataset(args.data_path, transform=True, custom_model=args.ref_dataset, binary=True)
 
-if args.model == 'custom':
+
+if args.ref_dataset:
     input_channel = next(iter(train_dataloader))[0][0].shape[1]
 else:
     input_channel = next(iter(train_dataloader))[0].shape[1]
@@ -84,7 +86,7 @@ elif args.model == 'alexnet':
     print("Loading AlexNet...")
     model.load_state_dict(torch.load('model_store/alexnetbest-model-parameters.pt', map_location=device))
     print("AlexNet loaded from checkpoint.")
-    model.fc[-1] = torch.nn.Linear(4096, 2).to(device)
+    model.fc[-1] = nn.Linear(4096, 2).to(device)
     n_classes = 2
 
 elif args.model == 'custom':
@@ -92,7 +94,15 @@ elif args.model == 'custom':
     print("Loading AlexNet...")
     alexnet.load_state_dict(torch.load('model_store/alexnetbest-model-parameters.pt', map_location=device))
     print("AlexNet loaded from checkpoint.")
-    fc = torch.nn.Linear(4096, 2).to(device)
+    fc = nn.Sequential(
+			nn.Linear(256 * 6 * 6, 4096), #(batch_size * 4096)
+			nn.ReLU(inplace=True),
+			nn.Dropout(p=0.5),
+			nn.Linear(4096, 4096), #(batch_size * 4096)
+			nn.ReLU(inplace=True),
+			nn.Dropout(p=0.5),
+			nn.Linear(4096, 2)
+    ).to(device)
     model = ModifiedAlexNet(input_channel=input_channel, alexnet=alexnet, fc=fc).to(device)
     n_classes = 2
 
@@ -179,25 +189,25 @@ elif args.model in ['efficientnetv2']:
 
     model = EfficientNetV2(cfgs=cfgs, in_channel=input_channel, num_classes=n_classes).to(device)
 
-#print(device)
-
 print(f'Total Number of Parameters of {args.model.capitalize()} is {round((sum(p.numel() for p in model.parameters()))/1000000, 2)}M')
 if not args.sam:
-    is_custom = args.model == 'custom'
+    is_custom = args.model == 'custom' and args.ref_dataset
     args.model = args.model if not is_custom else 'alexnet'
     trainer = Training(model=model, optimizer=config['parameters']['optimizer'], learning_rate=config['parameters']['learning_rate'], 
                 train_dataloader=train_dataloader, num_epochs=config['parameters']['num_epochs'],test_dataloader=test_dataloader,
                 model_name=args.model, model_save=args.model_save, checkpoint=args.checkpoint)
     precision = trainer.runner(custom_model=is_custom)
     print("Average valid accuracy: ", np.mean(precision))
+    print("Max valid accuracy: ", np.max(precision))
 else:
-    is_custom = args.model == 'custom'
+    is_custom = args.model == 'custom' and args.ref_dataset
     args.model = args.model if not is_custom else 'alexnet'
     trainer = TrainingWithSAM(model=model, optimizer=config['parameters']['optimizer'], learning_rate=config['parameters']['learning_rate'], 
                 train_dataloader=train_dataloader, num_epochs=config['parameters']['num_epochs'],test_dataloader=test_dataloader,
                 model_name=args.model, model_save=args.model_save, checkpoint=args.checkpoint)
     precision = trainer.runner(custom_model=is_custom)
     print("Average valid accuracy: ", np.mean(precision))
+    print("Max valid accuracy: ", np.max(precision))
     
 # Calculate FLops and Memory Usage.
 # model.to('cpu')

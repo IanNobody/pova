@@ -11,7 +11,7 @@ class initialize_dataset:
         self.batch_size=batch_size
         self.MNIST = MNIST
 
-    def load_dataset(self, path, transform=False, custom_model=False):
+    def load_dataset(self, path, transform=False, custom_model=False, binary=False):
         #path = "./data"
         #path = './trailcam'
         #path = './custom_dataset'
@@ -20,10 +20,10 @@ class initialize_dataset:
             transform = augmentation(image_resolution=self.image_resolution)
         elif self.MNIST:
             transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((self.image_resolution, self.image_resolution)),
-                 transforms.RandomHorizontalFlip(), transforms.Normalize(mean=[94.4795, 99.3368, 94.0037], std=[42.7191, 42.3097, 41.7960])])
+                    transforms.RandomHorizontalFlip(), transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
         else:
             # transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((self.image_resolution, self.image_resolution)),
-            #             transforms.RandomHorizontalFlip(), transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+            #      transforms.RandomHorizontalFlip(), transforms.Normalize(mean=[94.4795, 99.3368, 94.0037], std=[42.7191, 42.3097, 41.7960])])
             transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((self.image_resolution, self.image_resolution)),
                  transforms.RandomHorizontalFlip(), transforms.Normalize(mean=[74.9580, 77.5921, 73.6654], std=[50.9340, 51.9717, 50.6036])])
 
@@ -41,10 +41,12 @@ class initialize_dataset:
             #                                               label_dir=path + '/labels/test', transform=transform)
             train_dataset = custom_dataset.CustomDataset(img_dir=path + '/train',
                                                          transform=transform,
-                                                         custom_model=custom_model)
+                                                         custom_model=custom_model,
+                                                         binary=binary)
             test_dataset = custom_dataset.CustomDataset(img_dir=path + '/test',
                                                         transform=transform,
-                                                        custom_model=custom_model)
+                                                        custom_model=custom_model,
+                                                        binary=binary)
 
         if self.MNIST:
             train_dataloader = torch.utils.data.DataLoader(dataset = train_dataset,
