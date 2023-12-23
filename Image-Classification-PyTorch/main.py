@@ -76,7 +76,6 @@ if args.ref_dataset:
     input_channel = next(iter(train_dataloader))[0][0].shape[1]
 else:
     input_channel = next(iter(train_dataloader))[0].shape[1]
-# n_classes = len(torch.unique(next(iter(train_dataloader))[1]))
 n_classes = config['parameters']['n_classes']
 
 """Model Initialization"""
@@ -90,7 +89,7 @@ if args.model == 'vggnet':
 #
 elif args.model == 'alexnet':
     model = AlexNet(input_channel=input_channel, n_classes=n_classes).to(device)
-    model.load_state_dict(torch.load('model_store/alexnetbest-model-parameters.pt', map_location=device))
+    model.load_state_dict(torch.load('pretrained_base/trailcam_9000.pt', map_location=device))
     model.fc[-1] = nn.Linear(4096, 2).to(device)
     n_classes = 2
 # End of edited part
@@ -100,7 +99,7 @@ elif args.model == 'alexnet':
 #
 elif args.model == 'custom':
     alexnet = AlexNet(input_channel=input_channel, n_classes=n_classes).to(device)
-    alexnet.load_state_dict(torch.load('model_store/alexnetbest-model-parameters.pt', map_location=device))
+    alexnet.load_state_dict(torch.load('pretrained_base/trailcam_9000.pt', map_location=device))
     fc = nn.Sequential(
 			nn.Linear(256 * 6 * 6, 4096), #(batch_size * 4096)
 			nn.ReLU(inplace=True),
