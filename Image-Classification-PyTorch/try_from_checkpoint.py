@@ -52,7 +52,6 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         output = model(input_img, background)
-        print(output)
         output = torch.argmax(output)
         if output == 0:
             print('The image contains no animal.')
