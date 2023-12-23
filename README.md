@@ -66,8 +66,8 @@ When training on dataset of image pairs (target/background), you need to also sp
 
 ## Manual testing
 
-To manually test the image, you can run the `try_from_checkpoint.py` script to try the trained custom model on a specific pair of images. 
-If you want to use our best scoring pretrained model, you can download the weights from this [link](https://drive.google.com/file/d/1KE4tbq2VhPOSPYFksFYXdS-zFY5RL1Pu/view?usp=sharing).
+To manually test the custom model, you can run the `try_from_checkpoint.py` script on a specific pair of images.
+If you want to use our best scoring pretrained model, you can download the weights file from this [link](https://drive.google.com/file/d/1KE4tbq2VhPOSPYFksFYXdS-zFY5RL1Pu/view?usp=sharing).
 
 Example of usage of this script:
 `python try_from_checkpoint.py --weights_path ./best_checkpoint.pt --input_img ./pova_paired/test/fox-00014.jpg --background ./pova_paired/test/fox-00014.jpg.ref.jpg`
