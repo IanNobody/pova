@@ -1,3 +1,9 @@
+#
+#   POVa Project
+#	Clustering dataset images by their similarity
+#	Author: Matěj Gotzman <xgotzm00@vutbr.cz>
+#
+
 import os
 from os.path import join
 import shutil
@@ -37,7 +43,7 @@ class ImageDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        img = load_img(join(self.dir, self.images[idx]), target_size=(224,224))
+        img = load_img(join(self.dir, self.images[idx]), target_size=(224, 224))
         img = np.array(img)
         reshaped_img = img.reshape(224, 224, 3)
         return {"filename": self.images[idx], "data": preprocess_input(reshaped_img)}
@@ -69,11 +75,11 @@ def save_batch(batch_data, filenames, dest_path, batch_id):
 
 def sort_images_by_kmeans(groups, src_path, dst_path):
     for group in groups:
-      dst_dir = join(dst_path, str(group))
-      os.mkdir(dst_dir)
-      for img_file in groups[group]:
-        img = Image.open(join(src_path, img_file[0]))
-        img.save(join(dst_dir, img_file[0]))
+        dst_dir = join(dst_path, str(group))
+        os.mkdir(dst_dir)
+        for img_file in groups[group]:
+            img = Image.open(join(src_path, img_file[0]))
+            img.save(join(dst_dir, img_file[0]))
 
 
 def get_images(path):
@@ -132,5 +138,3 @@ if __name__ == '__main__':
             groups[cluster].append(file)
 
     sort_images_by_kmeans(groups, data_path, output_path)
-
-
