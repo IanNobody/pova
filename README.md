@@ -44,3 +44,23 @@ optional arguments:
   -p  --reference-file-prefix 	Reference file prefix.
 
 ```
+
+## Training the model
+
+Before training and evaluating the model, one must first download the pretrained weight and put to the `Image-Classification-PyTorch/pretrained_base/` subdirectory.
+
+The weights file can be downloaded from [GDrive](https://drive.google.com/file/d/1h9nnDOLKFoxDkNqdNtA5MroktJzpQ7N-/view?usp=share_link).
+All variants of the custom trailcam dataset can be downloaded from this [link](https://drive.google.com/drive/folders/1cUVipu0qP5ok07SDldgXmP49moeCHuHc?usp=share_link).
+All present datasets are already splitted to train/test subsets. 
+
+For training the original AlexNet model on one of the specially preprocessed datasets, you can use the following:
+
+`python main.py --model alexnet --data_path /path/to/data --model_save True`
+(For this combination of parameters, `custom_masked.zip` and `custom_raw.zip` datasets can be used.)
+
+
+When training on dataset of image pairs (target/background), you need to also specify the following:
+
+`python main.py --model custom --data_path /path/to/data --model_save True --ref_dataset True`
+(Corresponding dataset from the download link is named `custom_paired.zip`)
+
