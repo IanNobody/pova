@@ -1,3 +1,12 @@
+#
+#   POVa Project
+#	Custom dataset loader for loading images from
+#   https://universe.roboflow.com/my-game-pics/my-game-pics
+#	Authors:
+#	- Šimon Strýček <xstryc06@vutbr.cz>
+#   - Kateřina Neprašová <xnepra01@vutbr>
+#
+
 from torch.utils.data import Dataset
 import torch
 import cv2

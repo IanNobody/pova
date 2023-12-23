@@ -1,3 +1,11 @@
+#
+#   POVa Project
+#	Custom trailcam dataset loader
+#	Authors:
+#	- Šimon Strýček <xstryc06@vutbr.cz>
+#   - Kateřina Neprašová <xnepra01@vutbr>
+#
+
 from torch.utils.data import Dataset
 import torch
 import cv2
