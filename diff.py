@@ -1,3 +1,9 @@
+#
+#   POVa Project
+#	Image alignment and background subtraction
+#	Author: Matěj Gotzman <xgotzm00@vutbr.cz>, Šimon Strýček <xstryc06@vutbr.cz>
+#
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
