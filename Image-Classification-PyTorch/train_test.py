@@ -55,8 +55,8 @@ class Training:
                 # Handling input of the modified AlexNet model was added in POVa project
                 #
                 if custom_model:
+                    background = images[1].to(device)
                     images = images[0].to(device)
-                    background = images[0].to(device)
                 else:
                     images = images.to(device)
                     background = None
@@ -103,8 +103,8 @@ class Training:
                         # Handling input of the modified AlexNet model was added in POVa project
                         #
                         if custom_model:
+                            background = images[1].to(device)
                             images = images[0].to(device)
-                            background = images[0].to(device)
                         else:
                             images = images.to(device)
                             background = None
