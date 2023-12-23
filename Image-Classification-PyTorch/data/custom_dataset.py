@@ -35,9 +35,6 @@ class CustomDataset(Dataset):
         self.augmentation = augmentation
         self.device = device
 
-        print(self.num_of_classes())
-        print(self.ann_dict)
-
     def __len__(self):
         return len(self.img)
 
