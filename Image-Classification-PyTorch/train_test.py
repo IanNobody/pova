@@ -51,20 +51,27 @@ class Training:
             total = 0
             for i, (images, labels) in enumerate(self.train_dataloader):
 
+                #
+                # Handling input of the modified AlexNet model was added in POVa project
+                #
                 if custom_model:
                     images = images[0].to(device)
                     background = images[0].to(device)
                 else:
                     images = images.to(device)
                     background = None
+                # End of edited part
 
                 labels = labels.to(device)
-                
-                # Forward pass
+
+                #
+                # Handling input of the modified AlexNet model was added in POVa project
+                #
                 if custom_model:
                     outputs = self.model(images, background)
                 else:
                     outputs = self.model(images)
+                # End of edited part
 
                 loss = criterion(outputs, labels)
 
@@ -92,19 +99,27 @@ class Training:
                     running_loss = 0
                     for images, labels in self.test_dataloader:
 
+                        #
+                        # Handling input of the modified AlexNet model was added in POVa project
+                        #
                         if custom_model:
                             images = images[0].to(device)
                             background = images[0].to(device)
                         else:
                             images = images.to(device)
                             background = None
+                        # End of edited part
 
                         labels = labels.to(device)
 
+                        #
+                        # Handling input of the modified AlexNet model was added POVa project
+                        #
                         if custom_model:
                             outputs = self.model(images, background)
                         else:
                             outputs = self.model(images)
+                        # End of edited part
 
                         loss= criterion(outputs,labels)
                         running_loss+=loss.item()
@@ -124,8 +139,12 @@ class Training:
             for p in self.optimizer.param_groups:
                     print(f"Epoch {epoch+1} Learning Rate: {p['lr']}")
 
+            #
+            # Scheduler was removed for purposes of POVa project
+            #
             # if self.model_name in ['alexnet', 'vit', 'mlpmixer', 'resmlp', 'squeezenet', 'senet', 'mobilenetv1', 'gmlp', 'efficientnetv2']:
             #     scheduler.step()
+            # End of edited part
 
             if self.checkpoint:
                 path = 'checkpoints/checkpoint{:04d}.pth.tar'.format(epoch)
@@ -146,4 +165,8 @@ class Training:
             test_accu.append(test_accuracy)
     
         trainTestPlot(self.plot, train_accu, test_accu, train_losses, test_losses, self.model_name)
+        #
+        # Returning the test accuracy was added in POVa project
+        #
         return test_accu
+        # End of edited part

@@ -102,7 +102,6 @@ class TrainingWithSAM:
             scheduler.step()
 
             if self.checkpoint:
-                print("Saving checkpoint to checkpoints/checkpoint{:04d}.pth.tar".format(epoch))
                 path = 'checkpoints/checkpoint{:04d}.pth.tar'.format(epoch)
                 Path('checkpoints/').mkdir(parents=True, exist_ok=True)
                 torch.save(

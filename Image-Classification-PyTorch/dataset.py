@@ -11,11 +11,10 @@ class initialize_dataset:
         self.batch_size=batch_size
         self.MNIST = MNIST
 
+    #
+    # This function was modified for purposes of the POVa project
+    #
     def load_dataset(self, path, transform=False, custom_model=False, binary=False):
-        #path = "./data"
-        #path = './trailcam'
-        #path = './custom_dataset'
-        #path = './custom_dataset_unprocessed'
         if transform:
             transform = augmentation(image_resolution=self.image_resolution)
         elif self.MNIST:

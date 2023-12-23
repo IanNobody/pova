@@ -74,8 +74,12 @@ def optim(model_name, model, lr):
         return optimizer, scheduler
     if model_name == 'alexnet':
         optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=0.0005, momentum=0.9)
+        #
+        # The removal of the scheduler was introduced for purposes of POVa project
+        #
         # scheduler = CyclicLR(optimizer, base_lr=1e-07, max_lr=0.1, step_size_up=100, mode="triangular")
         scheduler = None
+
         return optimizer, scheduler
     if model_name == 'vggnet':
         """THIS SETTING DOESN'T WORK, RESULTS IN NAN"""

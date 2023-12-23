@@ -49,11 +49,15 @@ model_parser.add_argument('--manual_seed', type=int, required=False)
 model_parser.add_argument('--ref_dataset', type=bool, required=False)
 args = model_parser.parse_args()
 
+#
+# The following code was added in POVa project.
+#
 if args.manual_seed:
     torch.manual_seed(args.manual_seed)
     random.seed(args.manual_seed)
     np.random.seed(args.manual_seed)
     torch.backends.cudnn.deterministic = True
+# End of edited part
 
 """Loading Config File"""
 try:
@@ -81,19 +85,22 @@ if args.model == 'vggnet':
     model = VGG11(input_channel=input_channel, n_classes=n_classes,
             image_resolution=config['parameters']['image_resolution']).to(device)
 
+#
+# For the POVa project, the AlexNet model is used as binary classifier.
+#
 elif args.model == 'alexnet':
     model = AlexNet(input_channel=input_channel, n_classes=n_classes).to(device)
-    print("Loading AlexNet...")
     model.load_state_dict(torch.load('model_store/alexnetbest-model-parameters.pt', map_location=device))
-    print("AlexNet loaded from checkpoint.")
     model.fc[-1] = nn.Linear(4096, 2).to(device)
     n_classes = 2
+# End of edited part
 
+#
+# The custom model is used for the POVa project.
+#
 elif args.model == 'custom':
     alexnet = AlexNet(input_channel=input_channel, n_classes=n_classes).to(device)
-    print("Loading AlexNet...")
     alexnet.load_state_dict(torch.load('model_store/alexnetbest-model-parameters.pt', map_location=device))
-    print("AlexNet loaded from checkpoint.")
     fc = nn.Sequential(
 			nn.Linear(256 * 6 * 6, 4096), #(batch_size * 4096)
 			nn.ReLU(inplace=True),
@@ -105,6 +112,7 @@ elif args.model == 'custom':
     ).to(device)
     model = ModifiedAlexNet(input_channel=input_channel, alexnet=alexnet, fc=fc).to(device)
     n_classes = 2
+# End of edited part
 
 elif args.model == 'senet':
     model = SENet(input_channel=input_channel, n_classes=n_classes).to(device)
@@ -190,6 +198,11 @@ elif args.model in ['efficientnetv2']:
     model = EfficientNetV2(cfgs=cfgs, in_channel=input_channel, num_classes=n_classes).to(device)
 
 print(f'Total Number of Parameters of {args.model.capitalize()} is {round((sum(p.numel() for p in model.parameters()))/1000000, 2)}M')
+
+#
+# Printing the performance summary was added in POVa project
+#
+precision = []
 if not args.sam:
     is_custom = args.model == 'custom' and args.ref_dataset
     args.model = args.model if not is_custom else 'alexnet'
@@ -197,8 +210,6 @@ if not args.sam:
                 train_dataloader=train_dataloader, num_epochs=config['parameters']['num_epochs'],test_dataloader=test_dataloader,
                 model_name=args.model, model_save=args.model_save, checkpoint=args.checkpoint)
     precision = trainer.runner(custom_model=is_custom)
-    print("Average valid accuracy: ", np.mean(precision))
-    print("Max valid accuracy: ", np.max(precision))
 else:
     is_custom = args.model == 'custom' and args.ref_dataset
     args.model = args.model if not is_custom else 'alexnet'
@@ -206,8 +217,10 @@ else:
                 train_dataloader=train_dataloader, num_epochs=config['parameters']['num_epochs'],test_dataloader=test_dataloader,
                 model_name=args.model, model_save=args.model_save, checkpoint=args.checkpoint)
     precision = trainer.runner(custom_model=is_custom)
-    print("Average valid accuracy: ", np.mean(precision))
-    print("Max valid accuracy: ", np.max(precision))
+
+print("Average valid accuracy: ", np.mean(precision))
+print("Max valid accuracy: ", np.max(precision))
+# End of edited part
     
 # Calculate FLops and Memory Usage.
 # model.to('cpu')
